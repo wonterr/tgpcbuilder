@@ -6,7 +6,7 @@ from flask import Flask, request
 
 TOKEN = "7040613432:AAHAIt7MJuMwRS_U7cbIZdaUU7rk2gsIcjE"
 bot = telebot.TeleBot(TOKEN)
-bot.set_webhook(url="https://<tgpcbuilder>.onrender.com/")
+#bot.set_webhook(url="https://tgpcbuilder.onrender.com")
 
 def get_price_kaspi(url):
     try:
