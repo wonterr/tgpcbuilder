@@ -2,12 +2,11 @@ import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import requests
 from bs4 import BeautifulSoup
+from flask import Flask, request
 
-# 🔐 ВСТАВЬ СЮДА СВОЙ ТОКЕН!
 TOKEN = "7040613432:AAHAIt7MJuMwRS_U7cbIZdaUU7rk2gsIcjE"
 bot = telebot.TeleBot(TOKEN)
 
-# ✅ Функция получения цены с DNS
 def get_price_kaspi(url):
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
@@ -22,13 +21,11 @@ def get_price_kaspi(url):
     except Exception:
         return None
 
-# ✅ Универсальная функция для определения магазина
 def get_price(url):
     if "kaspi.kz" in url:
         return get_price_kaspi(url)
     return None
 
-# ✅ Список комплектующих для сборки до 300 000₸
 build_300_parts = [
     {
         "name": "Процессор: Intel Core i3-12100F",
@@ -75,7 +72,7 @@ intel_cpu_mobo = [
     },
     {
         "name": "Материнская плата: ASRock H610M-HDV/M.2 R2.0",
-        "url": "https://kaspi.kz/shop/p/asrock-h610m-hdv-m-2-r2-0-113833607/?c=750000000"
+        "url": "https://kaspi.kz/shop/p/asrock-h610m-hdv-m-2-r-2-0-113833607/?c=750000000"
     }
 ]
 
@@ -120,7 +117,6 @@ common_400_parts = [
     }
 ]
 
-# ✅ Функция генерации сообщения
 def generate_build_response(parts):
     result = "🛠 Ваша сборка:\n\n"
     total_price = 0
@@ -132,11 +128,9 @@ def generate_build_response(parts):
         else:
             price_str = "Ошибка при получении цены"
         result += f"- {part['name']} — <a href=\"{part['url']}\">Kaspi</a>\n  💰 Цена: {price_str}\n\n"
-    
     result += f"<b>💵 Итоговая стоимость:</b> {total_price:,} ₸".replace(",", " ")
     return result
 
-# ✅ Команда /start с кнопкой
 @bot.message_handler(commands=["start"])
 def start(message):
     markup = InlineKeyboardMarkup()
@@ -144,8 +138,6 @@ def start(message):
     markup.add(InlineKeyboardButton("Сборка за ~400 000₸", callback_data="build_400"))
     bot.send_message(message.chat.id, "Выбери бюджет сборки:", reply_markup=markup)
 
-
-# ✅ Обработка нажатия кнопки
 @bot.callback_query_handler(func=lambda call: call.data == "build_300")
 def handle_build(call):
     response = generate_build_response(build_300_parts)
@@ -172,5 +164,21 @@ def handle_build_400_amd(call):
     response = generate_build_response(full_build)
     bot.send_message(call.message.chat.id, response, parse_mode="HTML")
 
-# ✅ Запуск бота
-bot.polling()
+# --- Flask + webhook ---
+app = Flask(__name__)
+
+@app.route('/', methods=['POST'])
+def webhook():
+    if request.headers.get('content-type') == 'application/json':
+        json_str = request.get_data().decode('UTF-8')
+        update = telebot.types.Update.de_json(json_str)
+        bot.process_new_updates([update])
+        return '', 200
+    return '', 403
+
+@app.route('/', methods=['GET'])
+def index():
+    return "Bot is running!", 200
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
