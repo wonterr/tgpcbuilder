@@ -1,0 +1,2 @@
+#!binbash
+python pc.py
