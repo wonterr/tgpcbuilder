@@ -135,6 +135,7 @@ def generate_build_response(parts):
 @bot.message_handler(commands=["start"])
 def start(message):
     markup = InlineKeyboardMarkup()
+    print("Получена команда /start")
     markup.add(InlineKeyboardButton("Сборка за ~300 000₸", callback_data="build_300"))
     markup.add(InlineKeyboardButton("Сборка за ~400 000₸", callback_data="build_400"))
     bot.send_message(message.chat.id, "Выбери бюджет сборки:", reply_markup=markup)
