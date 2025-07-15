@@ -1,2 +1,2 @@
 #!/bin/bash
-python pc.py
+gunicorn main:app --bind 0.0.0.0:$PORT
